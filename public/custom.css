@@ -1,0 +1,12 @@
+```css
+    /* This hides the attachment button in the main chat input bar */
+    .attachment-button {
+        display: none !important;
+    }
+    ```
+
+/* Responsive layout adjustments */
+html, body, #root { height: 100%; margin: 0; overflow: hidden; }
+#root { display: flex; flex-direction: column; }
+main { flex: 1; overflow-y: auto; }
+@supports (height: 100svh) { main { min-height: 100svh; } 
