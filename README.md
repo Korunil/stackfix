@@ -3,9 +3,14 @@
 ![Python](https://img.shields.io/badge/Python-3.11-blue)
 ![LangChain](https://img.shields.io/badge/LangChain-Agentic-green)
 ![FAISS](https://img.shields.io/badge/FAISS-Vector_Search-orange)
+[![Hugging Face](https://img.shields.io/badge/Dataset-HuggingFace-yellow)](https://huggingface.co/datasets/Korunil/stackfix)
+![RAG](https://img.shields.io/badge/RAG-Hybrid-blueviolet)
 ![License](https://img.shields.io/badge/License-Apache_2.0-red)
 
 > Built for realistic developer debugging workflows using hybrid retrieval + intelligent routing.
+
+Focus areas:
+`Hybrid Retrieval` • `Agentic Routing` • `Grounded Debugging` • `RAG Systems` • `Semantic Search`
 
 ### Agentic Hybrid AI Debugging System with Intelligent Local Retrieval and Live Internet Reasoning
 
@@ -39,7 +44,9 @@ to provide grounded, practical, and developer-focused debugging assistance.
 - [💻 System Requirements](#-system-requirements)
 - [📈 Performance Characteristics](#-performance-characteristics)
 - [🏗️ Architecture](#️-architecture)
+- [🔀 Flowchart](#-flowchart)
 - [🔄 Retrieval Pipeline](#-retrieval-pipeline)
+- [📊 Retrieval Quality Snapshot](#-retrieval-quality-snapshot)
 - [📂 Repository Structure](#-repository-structure)
 - [🎥 Demo Videos](#-demo-videos)
 - [🖥️ UI Walkthrough](#️-ui-walkthrough)
@@ -48,6 +55,7 @@ to provide grounded, practical, and developer-focused debugging assistance.
 - [🧮 Offload Mode](#-offload-mode)
 - [🔓 SSL Verification Toggle](#-ssl-verification-toggle)
 - [📚 Dataset](#-dataset)
+- [🤗 Prebuilt Retrieval Indexes and Full Dataset](#-prebuilt-retrieval-indexes-and-full-dataset)
 - [⚡ Performance Notes](#-performance-notes)
 - [🏷️ Source Attribution](#️-source-attribution)
 - [🧪 Example Queries](#-example-queries)
@@ -100,7 +108,23 @@ git clone https://github.com/Korunil/stackfix.git
 cd stackfix
 
 pip install -r requirements.txt
+```
 
+## Download Prebuilt Indexes
+
+Download FAISS + BM25 indexes from:
+
+[Hugging Face Dataset](https://huggingface.co/datasets/Korunil/stackfix)
+
+Place them inside:
+
+```text
+./model_cache/
+```
+
+## Launch StackFix
+
+```bash
 chainlit run app.py
 ```
 
@@ -233,6 +257,8 @@ Recommended:
 - 32GB+ RAM
 - 10GB+ free storage for indexes
 
+> ⚠️ Loading full retrieval indexes may require substantial RAM depending on FAISS configuration and BM25 size.
+
 Minimum:
 - CPU-only supported via OFFLOAD_MODE
 - Lower RAM systems may experience slower retrieval/reranking
@@ -262,49 +288,17 @@ StackFix intentionally separates retrieval confidence estimation from final resp
 
 This allows routing decisions to remain lightweight, interpretable, and modular while preventing expensive internet reasoning for queries that can already be solved locally with high confidence.
 
-```text
-                        ┌────────────────────┐
-                        │    User Query      │
-                        └─────────┬──────────┘
-                                  │
-                                  ▼
-                    ┌────────────────────────┐
-                    │ Query Refinement Agent │
-                    └─────────┬──────────────┘
-                              ▼
-                    ┌────────────────────────┐
-                    │ Confidence + Routing   │
-                    │ Agents                 │
-                    └─────────┬──────────────┘
-                      LOCAL   │   INTERNET
-                              │
-              ┌───────────────┴────────────────┐
-              ▼                                ▼
+Key architectural goals:
 
-    ┌──────────────────┐             ┌──────────────────┐
-    │ Hybrid Retriever │             │ Live Web Search  │
-    │ FAISS + BM25     │             │ + Reasoning      │
-    └────────┬─────────┘             └────────┬─────────┘
-             │                                │
-             ▼                                ▼
+* minimize unnecessary internet reasoning
+* improve debugging grounding quality
+* balance semantic and lexical retrieval
+* reduce hallucinated fixes
+* optimize retrieval latency for known issues
 
-    ┌──────────────────┐             ┌──────────────────┐
-    │ Cross-Encoder    │             │ Web Context      │
-    │ Reranker         │             │ Builder          │
-    └────────┬─────────┘             └────────┬─────────┘
-             │                                │
-             └────────────────┬───────────────┘
-                              ▼
+![Architecture](./assets/stackfix_architecture.png)
 
-                    ┌──────────────────┐
-                    │ LLM Generator    │
-                    └────────┬─────────┘
-                             ▼
-
-                    ┌──────────────────┐
-                    │ Final Response   │
-                    └──────────────────┘
-```
+---
 
 # 🔀 Flowchart
 
@@ -352,6 +346,23 @@ flowchart TD
 8. Top documents are converted into structured context
 9. LLM generates grounded debugging response
 10. Source attribution is attached
+
+---
+
+# 📊 Retrieval Quality Snapshot
+
+| Retrieval Strategy | Strength |
+|---|---|
+| FAISS Only | Strong semantic similarity matching |
+| BM25 Only | Strong exact traceback and keyword matching |
+| Hybrid Retrieval | Better overall debugging recall |
+| Hybrid + Reranking | Highest contextual relevance and grounding quality |
+
+This hybrid retrieval design helps StackFix balance:
+- semantic understanding
+- exact error matching
+- contextual relevance
+- grounded debugging responses
 
 ---
 
@@ -576,7 +587,7 @@ SSL_VERIFY = False
 
 # 📚 Dataset
 
-StackFix uses a StackOverflow-style debugging dataset containing:
+StackFix uses the public StackSample dataset from Kaggle containing:
 - programming questions
 - accepted answers
 - code snippets
@@ -602,10 +613,56 @@ Excluded:
 * **Context Strategy:** Questions, answers, and code blocks are merged into a single text block (`retrieval_text`).
 
 ### 📥 How to Generate the Indexes
-1. Download the Kaggle StackSample dataset from link: https://www.kaggle.com/datasets/stackoverflow/stacksample/data.
+1. Download the Kaggle StackSample dataset from link:[Kaggle StackSample Dataset](https://www.kaggle.com/datasets/stackoverflow/stacksample/data).
 2. Place the csv files inside your `./datasets/raw/` directory.
 3. Run `./scripts/preprocess_dataset.py` to start generation of `stackoverflow.jsonl`.
 4. `chainlit run app.py`. The system will automatically detect the files.
+
+---
+
+# 🤗 Prebuilt Retrieval Indexes and Full Dataset
+
+To avoid regenerating embeddings and indexes locally, StackFix provides prebuilt retrieval artifacts hosted on Hugging Face.
+
+Due to GitHub file size limitations, the full StackFix retrieval artifacts are hosted on Hugging Face.
+
+## 📥 Download
+
+Hugging Face Repository:
+
+[Hugging Face Dataset](https://huggingface.co/datasets/Korunil/stackfix)
+
+Included:
+
+* FAISS vector indexes
+* BM25 retrieval index
+* Processed StackOverflow retrieval dataset
+
+These prebuilt indexes allow StackFix to start instantly without requiring multi-hour embedding generation.
+
+## 📦 Included Files
+
+| File                  | Description                     |
+| --------------------- | ------------------------------- |
+| `faiss_index/`        | Prebuilt FAISS vector indexes   |
+| `bm25_index.pkl`      | Serialized BM25 retrieval index |
+| `stackoverflow.jsonl` | Processed retrieval dataset     |
+
+## 🚀 Usage
+
+Place the downloaded files inside:
+
+```bash
+./model_cache/
+```
+
+Then launch StackFix normally:
+
+```bash
+chainlit run app.py
+```
+
+The system will automatically detect and load the indexes.
 
 ---
 
@@ -679,7 +736,7 @@ I am getting RuntimeError: CUDA out of memory while training my PyTorch model. H
 
 # ▶️ Running Locally
 
-## Clone Repository
+## 1️⃣ Clone Repository
 
 ```bash
 git clone https://github.com/Korunil/stackfix.git
@@ -688,7 +745,7 @@ cd stackfix
 
 ---
 
-## Install Dependencies
+## 2️⃣ Install Dependencies
 
 ```bash
 pip install -r requirements.txt
@@ -696,11 +753,73 @@ pip install -r requirements.txt
 
 ---
 
-## Launch Application
+# ⚡ Recommended Setup (Fast Startup)
+
+Download prebuilt FAISS + BM25 indexes from:
+
+[Hugging Face Dataset](https://huggingface.co/datasets/Korunil/stackfix)
+
+Place the downloaded files inside:
+
+```bash
+./model_cache/
+```
+
+Structure example:
+
+```text
+model_cache/
+├── faiss_index/
+└── bm25_index.pkl
+```
+
+This avoids regenerating embeddings locally and dramatically reduces setup time.
+
+---
+
+# 🛠️ Full Local Index Generation (Optional)
+
+If you want to build the indexes yourself:
+
+## 1. Download StackSample Dataset
+
+Download from:
+
+[Kaggle StackSample Dataset](https://www.kaggle.com/datasets/stackoverflow/stacksample/data)
+
+---
+
+## 2. Place CSV Files
+
+Move the downloaded CSV files into:
+
+```text
+./datasets/raw/
+```
+
+---
+
+## 3. Generate Processed Dataset
+
+```bash
+python ./scripts/preprocess_dataset.py
+```
+
+---
+
+## 4. Launch StackFix
 
 ```bash
 chainlit run app.py
 ```
+
+The system will automatically:
+
+* generate embeddings
+* build FAISS indexes
+* build BM25 indexes
+* cache retrieval artifacts
+
 
 ---
 
@@ -818,4 +937,3 @@ Built using open-source tooling from:
 - Sentence Transformers
 - Hugging Face
 - PyTorch
-
