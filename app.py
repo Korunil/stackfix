@@ -105,16 +105,41 @@ async def main(message: cl.Message):
     # Add Citations to the bottom of the message
     if state.get("citations"):
         final_content += "---\n### 📚 Sources:\n"
+        SOURCE_META = {
+            "github": ("🐙", "GitHub"),
+            "github_api": ("🐙", "GitHub API"),
+            "stackoverflow": ("💬", "StackOverflow"),
+            "docs": ("📘", "Docs"),
+            "huggingface": ("🤗", "HuggingFace"),
+            "web": ("🌐", "Web")
+        }
+        
         for i, cite in enumerate(state["citations"], 1):
             title = cite.get("title", "Unknown Title")
             
             # Check the flag!
             if cite.get("is_external"):
-                url = cite.get("url", "#")
-                final_content += f"**[{i}]** 🌐 [{title}]({url})\n"
+                url = cite.get("url") or "#"
+                source_type = cite.get("source_type", "web")
+                
+                icon, label = SOURCE_META.get(
+                    source_type,
+                    ("🌐", "Web")
+                )
+                final_content += (
+                    f"**[{i}]** {icon} "
+                    f"[{title}]({url}) "
+                    f"*({label})*\n"
+                )
             else:
                 score = cite.get("score", 0.0)
-                final_content += f"**[{i}]** 🗄️ {title} *(Relevance: {score:.4f})*\n"
+                icon, label = SOURCE_META.get("docs", ("🌐", "Web"))
+                final_content += (
+                    f"**[{i}]** {icon} "
+                    f"[{title}] "
+                    f"*({label}) "
+                    f"*(Relevance: {score:.4f})*\n"
+                )
 
     # Update the message one last time to snap the citations into place at the bottom
     msg.content = final_content
