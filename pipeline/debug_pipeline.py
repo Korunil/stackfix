@@ -7,13 +7,42 @@ from prompts.debug_prompt import build_debug_user_prompt
 from prompts.fallback_prompt import build_fallback_user_prompt
 
 from core.citation_builder import build_context, build_fallback_context
-
+from core.query_fallback import build_web_query
 from core.github_search import github_fallback
 from core.web_search import web_fallback
 
 from memory.memory import ChatMemory
 
 from config import GENERATION_CONFIGS
+
+from urllib.parse import urlparse
+
+def normalize(url):
+    try:
+        return urlparse(url).netloc + urlparse(url).path
+    except:
+        return url
+
+def infer_source_type(url):
+
+    if not url:
+        return "web"
+
+    url = url.lower()
+
+    if "github.com" in url:
+        return "github"
+
+    if "stackoverflow.com" in url:
+        return "stackoverflow"
+
+    if "docs.python.org" in url:
+        return "docs"
+
+    if "huggingface.co" in url:
+        return "huggingface"
+
+    return "web"
 
 class DebugPipeline:
 
@@ -74,24 +103,54 @@ class DebugPipeline:
         else: # "fallback"
             
             # Set the config
-            active_config = GENERATION_CONFIGS["fallback"]            
-            github_results = github_fallback(refined_query)
+            active_config = GENERATION_CONFIGS["fallback"]
+            web_query = build_web_query(query, refined_signals)
+            github_results = github_fallback(web_query)
+            web_results = web_fallback(web_query, refined_signals)
+            
+            # treat only meaningful GitHub results as valid
+            valid_github = [
+                g for g in github_results
+                if g.get("url") and g.get("title")
+            ]
             
             # THE SAFETY NET: If GitHub failed
-            if not github_results: 
-                web_results = web_fallback(refined_query) 
+            if github_results: 
+                github_urls = {normalize(g.get("url", "")) for g in valid_github}
+                web_results = [
+                    w for w in web_results
+                    if normalize(w.get("url", "")) not in github_urls
+                ][:2] 
             else:
-                web_results = []
+                web_results = web_results[:5]
+            
+            if not github_results and not web_results:
+                print("ALL SOURCES FAILED → injecting fallback citation")
+                web_results = [{
+                    "title": "No external sources found",
+                    "url": "",
+                    "body": "Fallback generated response"
+                }]
             
             fallback_context = build_fallback_context(github_results, web_results)           
             user_prompt = build_fallback_user_prompt(full_query, fallback_context)
 
-            for ext in (github_results + web_results):
+            for ext in (github_results):
                 citations.append({
-                    "title": ext.get("title", "External Link"),
+                    "title": ext.get("title", "GitHub Results"),
                     "url": ext.get("url", "#"),
                     "score": ext.get("score", 1.0),
-                    "is_external": True
+                    "is_external": True,
+                    "source_type": "github_api"
+                })
+                
+            for ext in (web_results):
+                citations.append({
+                    "title": ext.get("title", "Web Results"),
+                    "url": ext.get("url", "#"),
+                    "score": ext.get("score", 1.0),
+                    "is_external": True,
+                    "source_type": infer_source_type(ext.get("url", "#"))
                 })
 
         print("\n========PIPELINE DEBUG==============")
@@ -100,6 +159,11 @@ class DebugPipeline:
         print("REFINED:", refined_query)
         print("CONFIDENCE:", confidence)
         print("ROUTE:", route)
+        print("RAW GITHUB:", github_results)
+        print("RAW WEB:", web_results)
+        print("FINAL CITATIONS:")
+        for c in citations:
+            print(c)
 
         return {
             "system_prompt": SYSTEM_PROMPT, 
