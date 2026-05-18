@@ -2,13 +2,13 @@ import ssl
 import os
 
 # The Offline mode
-LOCAL_MODE = True
+LOCAL_MODE = False
 if LOCAL_MODE:
     os.environ["HF_HUB_OFFLINE"] = "1"
     os.environ["TRANSFORMERS_OFFLINE"] = "1"
 
 # Verify SSL
-VERIFY_SSL = False
+VERIFY_SSL = True
 if not VERIFY_SSL:
     try:
         _create_unverified_https_context = ssl._create_unverified_context
