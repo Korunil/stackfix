@@ -198,3 +198,15 @@ MODERN_PACKAGES = [
     "llama_index",
     "transformers"
 ]
+
+TRUSTED_DOMAINS = [
+    "github.com",
+    "stackoverflow.com",
+    "python.langchain.com",
+    "docs.python.org",
+    "pytorch.org",
+    "tensorflow.org",
+    "fastapi.tiangolo.com",
+    "react.dev",
+    "nextjs.org"
+]
