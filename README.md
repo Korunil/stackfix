@@ -230,7 +230,7 @@ Local Match: 0.42
 Recommended:
 - Python 3.11
 - CUDA-enabled GPU
-- 16GB+ RAM
+- 32GB+ RAM
 - 10GB+ free storage for indexes
 
 Minimum:
