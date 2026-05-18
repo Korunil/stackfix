@@ -904,15 +904,11 @@ Internet fallback handles:
 
 - VSCode extension
 - Docker deployment
-- Streaming responses
-- GitHub issue ingestion
 - Better traceback parsing
 - Multi-hop debugging
 - Dependency conflict detection
 - Agentic debugging workflows
 - Query expansion improvements
-- GPU optimized FAISS indexes
-- Better code-aware reranking
 
 ---
 
