@@ -422,6 +422,7 @@ stackfix/
 │   ├── query_parser.py
 │   ├── query_builder.py
 │   ├── query_expander.py
+│   ├── query_fallback.py
 │   ├── github_search.py
 │   └── web_search.py
 │
@@ -436,8 +437,7 @@ stackfix/
 │   ├── vector_store.py
 │   ├── bm25_store.py
 │   ├── hybrid_retriever.py
-│   ├── reranker.py
-│   └── preload.py
+│   └── reranker.py
 │
 ├── pipeline/
 │   └── debug_pipeline.py
