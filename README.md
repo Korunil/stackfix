@@ -164,6 +164,7 @@ The result is a debugging assistant that is:
 - 🎯 Cross-encoder reranking
 - ⚡ Fast local debugging
 - 🌐 Live internet fallback
+- 🌍 Intelligent GitHub + web retrieval fallback
 - 📚 Source attribution
 - 🧩 Query refinement pipeline
 - 🖥️ Interactive Chainlit UI
@@ -366,7 +367,7 @@ This hybrid retrieval design helps StackFix balance:
 
 ---
 
-## INTERNET MODE
+## 🌐INTERNET MODE
 
 Activated when:
 - local confidence is insufficient
@@ -381,6 +382,27 @@ Pipeline:
 4. Context extraction
 5. LLM reasoning
 6. Structured debugging response
+
+### 🌍 Intelligent External Retrieval
+
+When LOCAL retrieval confidence is low, StackFix performs structured external retrieval using:
+
+- GitHub issue search
+- trusted technical web sources
+- signal-aware query construction
+- heuristic scoring and ranking
+
+The external retrieval pipeline prioritizes:
+- framework/package relevance
+- traceback overlap
+- exact dependency matches
+- trusted engineering domains
+
+This helps improve:
+- grounding quality
+- debugging relevance
+- retrieval precision
+- modern ecosystem issue handling
 
 ---
 
